@@ -1,0 +1,29 @@
+{
+    "database": {
+        "host": "127.0.0.1",
+        "user": "root",
+        "password": "",
+        "database": "air_freight"
+    },
+    "jwt_signature": "project.s3cr3T.k3y!@#",
+    "host_url": "http://localhost:3000",
+    "token":{
+        "duration": 7,
+        "duration_unit": "days"
+    },
+    "http_code":{
+        "ok": 200,
+        "in_server_err": 500,
+        "bad_req": 400,
+        "unauthorized": 401,
+        "not_found": 404
+    },
+    "order_status":{
+        "canceled": "Order Canceled",
+        "created": "Order Created",
+        "payment": "Payment Proof Uploaded",
+        "confirmed": "Order Confirmed",
+        "delivery": "Order is being delivered",
+        "completed": "Order completed"
+    }
+}

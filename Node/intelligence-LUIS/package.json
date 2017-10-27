@@ -24,6 +24,9 @@
     "bluebird": "^3.4.7",
     "botbuilder": "^3.8.2",
     "dotenv-extended": "^1.0.4",
+    "mysql": "^2.15.0",
+    "node-all-paths": "^1.0.3",
+    "node-dijkstra": "^2.5.0",
     "request": "^2.79.0",
     "restify": "^4.3.0"
   }

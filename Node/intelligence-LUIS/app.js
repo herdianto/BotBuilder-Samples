@@ -4,6 +4,7 @@ require('dotenv-extended').load();
 var builder = require('botbuilder');
 var restify = require('restify');
 var Store = require('./store');
+var route_service = require('./Routes_service');
 var spellService = require('./spell-service');
 
 // Setup Restify Server
@@ -49,7 +50,7 @@ bot.dialog('SearchHotels', [
     },
     function (session, results) {
         var destination = results.response;
-
+        console.log(JSON.stringify(destination));
         var message = 'Looking for hotels';
         if (session.dialogData.searchType === 'airport') {
             message += ' near %s airport...';
@@ -67,7 +68,7 @@ bot.dialog('SearchHotels', [
                 session.send('I found %d hotels:', hotels.length);
 
                 var message = new builder.Message()
-                    .attachmentLayout(builder.AttachmentLayout.carousel)
+                    .attachmentLayout(builder.AttachmentLayout.list)
                     .attachments(hotels.map(hotelAsAttachment));
 
                 session.send(message);
@@ -85,6 +86,7 @@ bot.dialog('SearchHotels', [
 
 bot.dialog('ShowHotelsReviews', function (session, args) {
     // retrieve hotel name from matched entities
+    console.log(args.intent.entities);
     var hotelEntity = builder.EntityRecognizer.findEntity(args.intent.entities, 'Hotel');
     if (hotelEntity) {
         session.send('Looking for reviews of \'%s\'...', hotelEntity.entity);
@@ -100,11 +102,64 @@ bot.dialog('ShowHotelsReviews', function (session, args) {
     matches: 'ShowHotelsReviews'
 });
 
+
+bot.dialog('deliverPackage', [
+    function (session, args, next) {
+        console.log(JSON.stringify(args.intent.entities));
+        var from = builder.EntityRecognizer.findEntity(args.intent.entities, 'from');
+        var to = builder.EntityRecognizer.findEntity(args.intent.entities, 'to');
+        if(from && !to){
+            console.log("1");
+            next({from: from.entity});
+        }else if(to && !from){
+            console.log("2");
+            next({to: to.entity});
+        }else if(to && from){
+            console.log("3");
+            next({to: to.entity, from: from.entity});
+        }else{
+            console.log("4");
+            next({data: ""});
+        }
+    },
+    function(session, results){
+        if(results.from && !results.to){
+            //builder.Prompts.text(session, 'to which location you want to send your package from '+results.from+'?');
+            session.endDialog("from: " + results.from);
+        }else if(results.to && !results.from){
+            session.endDialog("to: "+results.to);
+        }else if(results.to && results.from){
+            //console.log(JSON.stringify(route_service.getShorteshPath(1,8)));
+            //var p = route_service.getShortestPath(1,8);
+            //var q = route_service.getAllhPaths(1,8);
+            route_service.getShortestPath(results.from, results.to, function(q){
+                if(q){
+                    console.log("aa: "+JSON.stringify(q));
+                    var message = new builder.Message()
+                    .attachmentLayout(builder.AttachmentLayout.list)
+                    .attachments(q.map(routes));
+        
+                    session.send("Below is possible route(s) from: "+results.from +" - "+ "to: "+results.to +" ");
+                    session.endDialog(message);
+                }else{
+                    session.endDialog("No route found");
+                }
+            });
+        }else{
+            session.endDialog("undefined");
+        }
+    }
+]
+).triggerAction({
+    matches: 'deliverPackage'
+});
+
 bot.dialog('Help', function (session) {
     session.endDialog('Hi! Try asking me things like \'search hotels in Seattle\', \'search hotels near LAX airport\' or \'show me the reviews of The Bot Resort\'');
 }).triggerAction({
     matches: 'Help'
 });
+
 
 // Spell Check
 if (process.env.IS_SPELL_CORRECTION_ENABLED === 'true') {
@@ -143,4 +198,11 @@ function reviewAsAttachment(review) {
         .title(review.title)
         .text(review.text)
         .images([new builder.CardImage().url(review.image)]);
+}
+
+function routes(data) {
+    return new builder.HeroCard()
+        .title(data.title)
+        .text(JSON.stringify("routes: "+data.lane +" with time: "+data.cost +" minutes"))
+        .images([new builder.CardImage().url(data.image)]);
 }
