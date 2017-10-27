@@ -2,9 +2,9 @@ var Promise = require('bluebird');
 var query = require('./helper/db_connection');
 
 var images = [
-    "https://i.stack.imgur.com/MHmQW.png",
-    "https://i.stack.imgur.com/5wSvf.png",
-    "https://i.stack.imgur.com/1KYTw.png"
+    "https://image.ibb.co/ebhGbR/Indo.png",
+    "https://image.ibb.co/ebhGbR/Indo.png",
+    "https://image.ibb.co/ebhGbR/Indo.png"
 ];
 
 module.exports = {

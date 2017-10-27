@@ -102,6 +102,18 @@ bot.dialog('ShowHotelsReviews', function (session, args) {
     matches: 'ShowHotelsReviews'
 });
 
+bot.dialog('hi',[
+    function (session, args, next) {
+        builder.Prompts.text(session, "My name is KARL v1.0. I was born in Jakarta office at BIMA-2 room. My creator is Ken, Rinaldi, Suwa and Herdi. I was build to manage your inquiry. What can I help you?");
+    },function(session, result){
+        builder.Prompts.text(session, "What package do you want to send?");
+    },function(session, result){
+        builder.Prompts.text(session,"Please tell me your departure and destination coordinate");
+    }
+]).triggerAction({
+    matches: 'hi'
+});;
+
 bot.dialog('defineFrom', [
     function (session, args, next) {
         console.log("aaa"+JSON.stringify(session.userData));
@@ -132,7 +144,7 @@ bot.dialog('defineFrom', [
                 .attachmentLayout(builder.AttachmentLayout.list)
                 .attachments(q.map(routes));
     
-                session.send("Below is possible route(s) from: "+from +" - "+ "to: "+to+" ");
+                session.send("Below is best route from: "+from +" - "+ "to: "+to+" ");
                 session.endDialog(message);
             }else{
                 session.endDialog("No route found");
@@ -167,7 +179,7 @@ bot.dialog('deliverPackage', [
                     .attachmentLayout(builder.AttachmentLayout.list)
                     .attachments(q.map(routes));
         
-                    session.send("Below is possible route(s) from: "+from.entity +" - "+ "to: "+to.entity +" ");
+                    //session.send("Below is possible route(s) from: "+from.entity +" - "+ "to: "+to.entity +" ");
                     session.endDialog(message);
                 }else{
                     session.endDialog("No route found");
@@ -177,6 +189,10 @@ bot.dialog('deliverPackage', [
             console.log("4");
             next({data: ""});
         }
+    },function(session, result){
+        session.send("This is your order summary:");
+        session.send("Package: Car, Departure coordinate: 609, Destination coordinate: 411");
+        session.endDialog("Tracking ID: TR-123256");
     }
 ]
 ).triggerAction({
