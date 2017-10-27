@@ -102,6 +102,44 @@ bot.dialog('ShowHotelsReviews', function (session, args) {
     matches: 'ShowHotelsReviews'
 });
 
+bot.dialog('defineFrom', [
+    function (session, args, next) {
+        console.log("aaa"+JSON.stringify(session.userData));
+        if(session.userData.from){
+            builder.Prompts.text(session, "Where do you want to send your package?");
+        }else{
+            builder.Prompts.text(session, "From which location do ypu want to send your package?");
+        }
+    },
+    function (session, results){
+        ///console.log("true:"+JSON.stringify(session.userData));
+        
+        var to = ""; 
+        var from = ""; 
+
+        if(session.userData.from){
+            to = results.response;
+            from = session.userData.from;
+        }else{
+            to = session.userData.to;
+            from = results.response;
+        }
+
+        route_service.getShortestPath(from, to, function(q){
+            if(q){
+                //console.log("aa: "+JSON.stringify(q));
+                var message = new builder.Message()
+                .attachmentLayout(builder.AttachmentLayout.list)
+                .attachments(q.map(routes));
+    
+                session.send("Below is possible route(s) from: "+from +" - "+ "to: "+to+" ");
+                session.endDialog(message);
+            }else{
+                session.endDialog("No route found");
+            }
+        });
+    }
+]);
 
 bot.dialog('deliverPackage', [
     function (session, args, next) {
@@ -110,43 +148,34 @@ bot.dialog('deliverPackage', [
         var to = builder.EntityRecognizer.findEntity(args.intent.entities, 'to');
         if(from && !to){
             console.log("1");
-            next({from: from.entity});
+            session.userData.from = from.entity;
+            session.userData.to = null;
+            session.beginDialog('defineFrom', session.userData.from);
+            //next({from: from.entity});
         }else if(to && !from){
             console.log("2");
-            next({to: to.entity});
+            session.userData.to = to.entity;
+            session.userData.from = null;
+            session.beginDialog('defineFrom', session.userData.to);
+            //next({to: to.entity});
         }else if(to && from){
             console.log("3");
-            next({to: to.entity, from: from.entity});
-        }else{
-            console.log("4");
-            next({data: ""});
-        }
-    },
-    function(session, results){
-        if(results.from && !results.to){
-            //builder.Prompts.text(session, 'to which location you want to send your package from '+results.from+'?');
-            session.endDialog("from: " + results.from);
-        }else if(results.to && !results.from){
-            session.endDialog("to: "+results.to);
-        }else if(results.to && results.from){
-            //console.log(JSON.stringify(route_service.getShorteshPath(1,8)));
-            //var p = route_service.getShortestPath(1,8);
-            //var q = route_service.getAllhPaths(1,8);
-            route_service.getShortestPath(results.from, results.to, function(q){
+            route_service.getShortestPath(from.entity, to.entity, function(q){
                 if(q){
-                    console.log("aa: "+JSON.stringify(q));
+                    //console.log("aa: "+JSON.stringify(q));
                     var message = new builder.Message()
                     .attachmentLayout(builder.AttachmentLayout.list)
                     .attachments(q.map(routes));
         
-                    session.send("Below is possible route(s) from: "+results.from +" - "+ "to: "+results.to +" ");
+                    session.send("Below is possible route(s) from: "+from.entity +" - "+ "to: "+to.entity +" ");
                     session.endDialog(message);
                 }else{
                     session.endDialog("No route found");
                 }
             });
         }else{
-            session.endDialog("undefined");
+            console.log("4");
+            next({data: ""});
         }
     }
 ]
